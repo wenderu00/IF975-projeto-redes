@@ -27,7 +27,7 @@ def send_message(client_socket):
         formatted_message = f"{SERVER_IP}~ {SERVER_PORT}~ {USER_NAME}~ {timestamp}~{message}"
         client_socket.sendto(formatted_message.encode(), (SERVER_IP, SERVER_PORT))
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client_socket.sendto(f"hi, meu nome eh {USER_NAME}".encode(), (SERVER_IP, SERVER_PORT))
 
