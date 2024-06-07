@@ -49,4 +49,4 @@ def start_server():
             print(f"Novo cliente conectado: {client_address}")
 
 if __name__ == "_main_":
-    start_server()
+  start_server()
