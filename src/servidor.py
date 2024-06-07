@@ -48,5 +48,5 @@ def start_server():
             threading.Thread(target=handle_client, args=(server_socket, client_address)).start()
             print(f"Novo cliente conectado: {client_address}")
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     start_server()
