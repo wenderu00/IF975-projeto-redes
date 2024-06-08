@@ -42,7 +42,7 @@ def create_server(ip, port):
 
 def start_server():
     server_socket = create_server(SERVER_IP, SERVER_PORT)
-    print(f"Servidor iniciado em {SERVER_IP}:{SERVER_PORT}")
+    print(f"Servidor iniciado em {server_socket.getsockname()[0]}:{server_socket.getsockname()[1]}")
 
     while True:
         message, client_address = server_socket.recvfrom(BUFFER_SIZE)
