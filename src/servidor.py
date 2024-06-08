@@ -35,9 +35,13 @@ def handle_client(client_socket, client_address):
     del clients[client_address]
     client_socket.close()
 
-def start_server():
+def create_server(ip, port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server_socket.bind((SERVER_IP, SERVER_PORT))
+    server_socket.bind((ip, port))
+    return server_socket
+
+def start_server():
+    server_socket = create_server(SERVER_IP, SERVER_PORT)
     print(f"Servidor iniciado em {SERVER_IP}:{SERVER_PORT}")
 
     while True:
