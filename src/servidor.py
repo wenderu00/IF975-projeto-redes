@@ -1,6 +1,7 @@
 import socket
 import threading
 import datetime
+import re
 
 # Configuração do servidor
 SERVER_IP = "127.0.0.1"
@@ -10,10 +11,10 @@ BUFFER_SIZE = 1024
 # Armazenar os clientes conectados
 clients = {}
 
-def handle_client(client_socket, client_address):
+def handle_client(server_socket, client_address):
     while True:
         try:
-            message, client_address = client_socket.recvfrom(BUFFER_SIZE)
+            message, client_address = server_socket.recvfrom(BUFFER_SIZE)
             if not message:
                 break
             
@@ -25,15 +26,22 @@ def handle_client(client_socket, client_address):
 
            
             for client in clients:
-                client_socket.sendto(formatted_message.encode(), client)
+                server_socket.sendto(formatted_message.encode(), client)
                 
         except Exception as e:
             print(f"Erro ao lidar com o cliente {client_address}: {e}")
             break
 
     # Aqui remove o cliente quando a conexão é perdida
-    del clients[client_address]
-    client_socket.close()
+    #del clients[client_address]
+
+def conect_message(message):
+    conect_pattern = "hi, meu nome eh <"
+    decode_message = message.decode()
+    return conect_pattern in decode_message
+        
+        # user_name = decode_message[len(conect_pattern):len(decode_message)-1]
+        
 
 def create_server(ip, port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -46,8 +54,7 @@ def start_server():
 
     while True:
         message, client_address = server_socket.recvfrom(BUFFER_SIZE)
-
-        if client_address not in clients:
+        if conect_message(message) and client_address not in clients:
             clients[client_address] = client_address
             threading.Thread(target=handle_client, args=(server_socket, client_address)).start()
             print(f"Novo cliente conectado: {client_address}")
