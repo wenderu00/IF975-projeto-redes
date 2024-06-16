@@ -28,5 +28,9 @@ def send_message(client_socket):
 if __name__ == "__main__":
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+    # Bind do socket a uma porta local
+    client_socket.bind(('0.0.0.0', 0))
+
     threading.Thread(target=receive_messages, args=(client_socket,)).start()
     send_message(client_socket)
+    

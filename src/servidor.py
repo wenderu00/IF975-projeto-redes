@@ -65,6 +65,6 @@ def start_server():
             for client in clients:
                 server_socket.sendto(formatted_message.encode(), client)
             
-
 if __name__ == "__main__":
   start_server()
+  
