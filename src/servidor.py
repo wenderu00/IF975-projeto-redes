@@ -93,7 +93,5 @@ def start_server():
             formatted_message = format_message(decode_message, client_address, clients)
             notify_every_client(clients, formatted_message, server_socket)
             
-
 if __name__ == "__main__":
   start_server()
-
