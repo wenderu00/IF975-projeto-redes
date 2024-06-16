@@ -16,10 +16,10 @@ def format_message(message, client_address, clients):
     timestamp = datetime.datetime.now().strftime("%H:%M:%S %d/%m/%Y")
     return f"{client_address[0]}:{client_address[1]}/~{clients[client_address]}: {message} {timestamp}"
 
-def conect_message(message):
+def is_connect_command(message):
     return "hi, meu nome eh <" in message
 
-def exit_message(message):
+def is_exit_command(message):
     return message == "bye"
 
 def is_client_in_room(client_address, room_clients):
@@ -39,14 +39,30 @@ def send_message(message, server_socket, client_address):
 def new_user_connection_message(new_user):
     return f"<{new_user}> foi conectado a sala"
 
+def user_logged_out_message(disconnected_user):
+    return f"<{disconnected_user}> saiu da sala"
+
 def connected_message():
     return "conectado"
+
+def not_connected_message():
+    return "você não está conectado.\npara conectar digite o seguinte comando: \"hi, meu nome eh <NOME_DE_USUARIO>\""
+
+def disconnected_message():
+    return "você foi desconectado"
 
 def server_new_connection_message(client_address):
     return f"Novo cliente conectado: {client_address}"
 
+def server_disconnected_user_message(client_address):
+    return f"cliente desconectado: {client_address}"
+
 def server_start_message(server_socket):
     return f"Servidor iniciado em {server_socket.getsockname()[0]}:{server_socket.getsockname()[1]}"
+
+def notify_every_client(clients, message, server_socket):
+    for client in clients:
+        send_message(message, server_socket, client)
 
 # Função principal
 def start_server():
@@ -56,29 +72,26 @@ def start_server():
     while True:
         message, client_address = server_socket.recvfrom(BUFFER_SIZE)
         decode_message = message.decode()
-        if not is_client_in_room(client_address, clients) and conect_message(decode_message):
-            clients[client_address] = catch_username(decode_message)
+        if not is_client_in_room(client_address, clients) and is_connect_command(decode_message):
+            username = catch_username(decode_message)
             print(server_new_connection_message(client_address))
             send_message(connected_message(), server_socket, client_address)
-            for client in clients:
-                if client != client_address:
-                    send_message(new_user_connection_message(clients[client_address]), server_socket, client) 
+            notify_every_client(clients, new_user_connection_message(username), server_socket)
+            clients[client_address] = username 
             
-        elif not is_client_in_room(client_address, clients) and not conect_message(decode_message):
-            server_socket.sendto("você não está conectado.\npara conectar digite o seguinte comando: \"hi, meu nome eh <NOME_DE_USUARIO>\"".encode(), client_address)
-
-        elif exit_message(decode_message):
-            disconected_user = clients[client_address]
+        elif not is_client_in_room(client_address, clients) and not is_connect_command(decode_message):
+            send_message(not_connected_message(),server_socket, client_address)
+            
+        elif is_exit_command(decode_message):
+            disconnected_user = clients[client_address]
             del clients[client_address]
-            print(f"cliente desconectado: {client_address}")
-            server_socket.sendto("você foi desconectado".encode(), client_address)
-            for client in clients:
-                server_socket.sendto(f"<{disconected_user}> saiu da sala".encode(), client)
-            
+            print(server_disconnected_user_message(client_address))
+            send_message(disconnected_message(), server_socket, client_address)
+            notify_every_client(clients, user_logged_out_message(disconnected_user),server_socket)
+
         else:
             formatted_message = format_message(decode_message, client_address, clients)
-            for client in clients:
-                server_socket.sendto(formatted_message.encode(), client)
+            notify_every_client(clients, formatted_message, server_socket)
             
 
 if __name__ == "__main__":
