@@ -33,21 +33,36 @@ def create_server(ip, port):
     server_socket.bind((ip, port))
     return server_socket
 
+def send_message(message, server_socket, client_address):
+    server_socket.sendto(message.encode(), client_address)
+
+def new_user_connection_message(new_user):
+    return f"<{new_user}> foi conectado a sala"
+
+def connected_message():
+    return "conectado"
+
+def server_new_connection_message(client_address):
+    return f"Novo cliente conectado: {client_address}"
+
+def server_start_message(server_socket):
+    return f"Servidor iniciado em {server_socket.getsockname()[0]}:{server_socket.getsockname()[1]}"
+
 # Função principal
 def start_server():
     server_socket = create_server(SERVER_IP, SERVER_PORT)
-    print(f"Servidor iniciado em {server_socket.getsockname()[0]}:{server_socket.getsockname()[1]}")
-
+    print(server_start_message(server_socket))
+ 
     while True:
         message, client_address = server_socket.recvfrom(BUFFER_SIZE)
         decode_message = message.decode()
         if not is_client_in_room(client_address, clients) and conect_message(decode_message):
             clients[client_address] = catch_username(decode_message)
-            print(f"Novo cliente conectado: {client_address}")
-            server_socket.sendto("conectado".encode(), client_address)
+            print(server_new_connection_message(client_address))
+            send_message(connected_message(), server_socket, client_address)
             for client in clients:
                 if client != client_address:
-                    server_socket.sendto(f"<{clients[client_address]}> foi conectado a sala".encode(), client)    
+                    send_message(new_user_connection_message(clients[client_address]), server_socket, client) 
             
         elif not is_client_in_room(client_address, clients) and not conect_message(decode_message):
             server_socket.sendto("você não está conectado.\npara conectar digite o seguinte comando: \"hi, meu nome eh <NOME_DE_USUARIO>\"".encode(), client_address)
