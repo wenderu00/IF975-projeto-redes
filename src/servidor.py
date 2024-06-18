@@ -1,12 +1,13 @@
 import socket
 import threading
 import datetime
-import re
+import os
 
 # Configuração do servidor
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 12345
 BUFFER_SIZE = 1024
+MESSAGE_PATH = "server_message.txt"
 
 # Armazenar os clientes conectados
 clients = {}
@@ -34,7 +35,13 @@ def create_server(ip, port):
     return server_socket
 
 def send_message(message, server_socket, client_address):
-    server_socket.sendto(message.encode(), client_address)
+    with open(MESSAGE_PATH, "w") as file:
+        file.write(message)
+    with open(MESSAGE_PATH, "rb") as file:
+        while (chunck := file.read(BUFFER_SIZE)):
+            server_socket.sendto(chunck, client_address)
+    server_socket.sendto(b"EOF", client_address)
+    os.remove(MESSAGE_PATH)
 
 def new_user_connection_message(new_user):
     return f"<{new_user}> foi conectado a sala"
@@ -68,21 +75,29 @@ def notify_every_client(clients, message, server_socket):
 def start_server():
     server_socket = create_server(SERVER_IP, SERVER_PORT)
     print(server_start_message(server_socket))
- 
+
     while True:
-        message, client_address = server_socket.recvfrom(BUFFER_SIZE)
-        decode_message = message.decode()
-        if not is_client_in_room(client_address, clients) and is_connect_command(decode_message):
-            username = catch_username(decode_message)
+        data, client_address = server_socket.recvfrom(BUFFER_SIZE)
+        with open(MESSAGE_PATH, "wb") as file:
+            while data != b"EOF":
+                file.write(data)
+                data, _ = server_socket.recvfrom(BUFFER_SIZE)
+
+        with open(MESSAGE_PATH, "r") as file:
+            message = file.read()
+        os.remove(MESSAGE_PATH)
+    
+        if not is_client_in_room(client_address, clients) and is_connect_command(message):
+            username = catch_username(message)
             print(server_new_connection_message(client_address))
             send_message(connected_message(), server_socket, client_address)
             notify_every_client(clients, new_user_connection_message(username), server_socket)
             clients[client_address] = username 
             
-        elif not is_client_in_room(client_address, clients) and not is_connect_command(decode_message):
+        elif not is_client_in_room(client_address, clients) and not is_connect_command(message):
             send_message(not_connected_message(),server_socket, client_address)
             
-        elif is_exit_command(decode_message):
+        elif is_exit_command(message):
             disconnected_user = clients[client_address]
             del clients[client_address]
             print(server_disconnected_user_message(client_address))
@@ -90,7 +105,7 @@ def start_server():
             notify_every_client(clients, user_logged_out_message(disconnected_user),server_socket)
 
         else:
-            formatted_message = format_message(decode_message, client_address, clients)
+            formatted_message = format_message(message, client_address, clients)
             notify_every_client(clients, formatted_message, server_socket)
             
 if __name__ == "__main__":
