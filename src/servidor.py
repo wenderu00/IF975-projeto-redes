@@ -17,8 +17,8 @@ def format_message(message, client_address, clients):
     timestamp = datetime.datetime.now().strftime("%H:%M:%S %d/%m/%Y")
     return f"{client_address[0]}:{client_address[1]}/~{clients[client_address]}: {message} {timestamp}"
 
-def is_connect_command(message):
-    return "hi, meu nome eh <" in message
+def is_connect_command(message): 
+    return message[0:len("hi, meu nome eh <")] == "hi, meu nome eh <" and message[len(message)-1] == ">"
 
 def is_exit_command(message):
     return message == "bye"
