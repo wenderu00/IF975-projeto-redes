@@ -41,7 +41,7 @@ def send_message(client_socket):
         with open(path, "w") as file:
             file.write(message)
         with open(path, "rb") as file:
-            while (chunck := file.read(1)):
+            while (chunck := file.read(BUFFER_SIZE)):
                 client_socket.sendto(chunck, (SERVER_IP, SERVER_PORT))
         client_socket.sendto(b"EOF", (SERVER_IP, SERVER_PORT))
         os.remove(path)
