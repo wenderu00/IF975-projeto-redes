@@ -12,12 +12,15 @@ MESSAGE_PATH = "user_message.txt"
 
 # funções utilitárias
 
-def generate_message_path(client_socket):
-    return f"{client_socket.getsockname()[0]}_{client_socket.getsockname()[1]}_{MESSAGE_PATH}"
+def generate_send_message_path(client_socket):
+    return f"{client_socket.getsockname()[0]}_{client_socket.getsockname()[1]}_send_{MESSAGE_PATH}"
+
+def generate_recv_message_path(client_socket):
+    return f"{client_socket.getsockname()[0]}_{client_socket.getsockname()[1]}_recv_{MESSAGE_PATH}"
 
 # funções principais
 def receive_messages(client_socket):
-    path = generate_message_path(client_socket)
+    path = generate_recv_message_path(client_socket)
     while True:
         try:
             data, client_address = client_socket.recvfrom(BUFFER_SIZE)
@@ -35,7 +38,7 @@ def receive_messages(client_socket):
             break
 
 def send_message(client_socket):
-    path = generate_message_path(client_socket)
+    path = generate_send_message_path(client_socket)
     while True:
         message = input()
         with open(path, "w") as file:
